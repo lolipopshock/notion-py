@@ -451,6 +451,8 @@ class Block(Record):
         if task_id:
             # Wait until the duplication task finishes
             self._client.wait_for_task(task_id)
+        
+        self._client.refresh_records(block=[duplicate_target_id])
 
         return self.__class__(self._client, duplicate_target_id)
 
