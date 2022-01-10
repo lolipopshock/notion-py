@@ -425,6 +425,34 @@ class Block(Record):
             ]
         )
 
+    def duplicate(self):
+        
+        # Inspired by https://github.com/jamalex/notion-py/pull/266/
+
+        duplicate_target_id = self._client.create_record(
+            "block", self.parent, type="copy_indicator"
+        )
+        
+        data = self._client.post(
+            "enqueueTask",
+            {
+                "task": {
+                    "eventName": "duplicateBlock",
+                    "request": {
+                        "sourceBlockId": self.id,
+                        "targetBlockId": duplicate_target_id,
+                        "addCopyName": True,
+                    },
+                }
+            },
+        ).json()
+        task_id = data.get("taskId")
+
+        if task_id:
+            # Wait until the duplication task finishes
+            self._client.wait_for_task(task_id)
+
+        return self.__class__(self._client, duplicate_target_id)
 
 class DividerBlock(Block):
 
